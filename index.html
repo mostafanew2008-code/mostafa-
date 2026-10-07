@@ -3,206 +3,343 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mostafa | البطاقة الرقمية</title>
+    <link id="dynamic-favicon" rel="icon" type="image/png" href="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Icons & Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-    <title>Black Store</title>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
+    <script>
+        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Tajawal', 'sans-serif'] } } } }
+    </script>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-        }
-
         body {
-            background: #070707;
-            color: white;
+            font-family: 'Tajawal', sans-serif;
+            background-color: #080c14;
+            background-position: center;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
             min-height: 100vh;
         }
-
-        .top {
-            padding: 22px;
-            border-bottom: 1px solid #222;
-            background: #0d0d0d;
+        .bg-overlay {
+            background: linear-gradient(180deg, rgba(8, 12, 20, 0.75) 0%, rgba(8, 12, 20, 0.92) 100%);
+            backdrop-filter: blur(8px);
         }
-
-        .logo {
-            font-size: 27px;
-            font-weight: bold;
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
         }
-
-        .logo span {
-            color: #777;
+        .transparent-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
-        .subtitle {
-            color: #777;
-            margin-top: 6px;
-            font-size: 13px;
+        .transparent-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-3px) scale(1.01);
         }
-
-        .container {
-            width: 92%;
-            max-width: 1100px;
-            margin: 25px auto;
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255, 255, 255, 0.15); transition: .3s; border-radius: 24px;
         }
-
-        .welcome {
-            background: linear-gradient(135deg, #151515, #0d0d0d);
-            border: 1px solid #252525;
-            border-radius: 18px;
-            padding: 25px;
-            margin-bottom: 20px;
+        .slider:before {
+            position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+            background-color: white; transition: .3s; border-radius: 50%;
         }
-
-        .welcome h1 {
-            font-size: 25px;
-            margin-bottom: 8px;
-        }
-
-        .welcome p {
-            color: #888;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 15px;
-        }
-
-        .card {
-            background: #111;
-            border: 1px solid #242424;
-            border-radius: 16px;
-            padding: 22px;
-            transition: .2s;
-        }
-
-        .card:hover {
-            transform: translateY(-3px);
-            border-color: #444;
-        }
-
-        .icon {
-            font-size: 30px;
-            margin-bottom: 15px;
-        }
-
-        .card h2 {
-            font-size: 18px;
-            margin-bottom: 7px;
-        }
-
-        .card p {
-            color: #777;
-            font-size: 13px;
-        }
-
-        .status {
-            margin-top: 15px;
-            display: inline-block;
-            padding: 6px 10px;
-            border-radius: 20px;
-            background: #172117;
-            color: #79c779;
-            font-size: 12px;
-        }
-
-        .footer {
-            text-align: center;
-            color: #555;
-            padding: 30px 10px;
-            font-size: 12px;
-        }
+        input:checked + .slider { background-color: #10b981; }
+        input:checked + .slider:before { transform: translateX(20px); }
     </style>
 </head>
+<body id="main-body" class="text-gray-100 flex items-center justify-center min-h-screen p-4 sm:p-6 relative">
 
-<body>
+    <div class="fixed inset-0 bg-overlay z-0 pointer-events-none"></div>
 
-    <header class="top">
-        <div class="logo">
-            BLACK <span>STORE</span>
+    <div class="w-full max-w-md mx-auto relative z-10 my-auto">
+        <div class="flex justify-between items-center mb-4 px-2">
+            <button onclick="toggleQRModal()" class="text-xs font-semibold px-3.5 py-1.5 rounded-full transparent-btn text-gray-300 flex items-center gap-2">
+                <i class="fa-solid fa-qrcode text-purple-400"></i> مشاركة الكود
+            </button>
+            <span id="sync-status" class="text-[10px] font-medium px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> متصل بـ Firebase
+            </span>
         </div>
 
-        <div class="subtitle">
-            Control Panel
+        <div class="glass-card rounded-3xl p-6 sm:p-7 relative overflow-hidden">
+            <div class="text-center mb-7">
+                <div class="relative inline-block mb-3.5 cursor-pointer select-none group" onclick="handleImageClick()">
+                    <img id="profile-img" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300" class="w-28 h-28 rounded-full object-cover border-2 border-white/20 p-1 shadow-2xl transition duration-300 group-hover:scale-105">
+                    <span class="absolute bottom-1 right-1 w-4 h-4 bg-emerald-500 border-2 border-gray-900 rounded-full"></span>
+                </div>
+                <h1 id="user-name" class="text-2xl font-extrabold text-white">مصطفى</h1>
+                <p id="user-bio" class="text-xs text-gray-300 mt-1.5 max-w-xs mx-auto">صانع محتوى ومطور أفكار 🚀</p>
+            </div>
+
+            <div id="links-container" class="space-y-3"></div>
+
+            <div class="text-center mt-7 pt-4 border-t border-white/5">
+                <p class="text-[11px] text-gray-400 font-medium">تصميم وتطوير بواسطة <span class="text-purple-400 font-bold">مصطفى</span> &copy; 2026</p>
+            </div>
         </div>
-    </header>
+    </div>
 
-    <main class="container">
+    <!-- Modals -->
+    <div id="qr-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+        <div class="glass-card rounded-2xl p-6 w-full max-w-xs text-center border border-white/10">
+            <h3 class="text-lg font-bold text-white mb-2">كود مشاركة الملف</h3>
+            <div id="qrcode" class="bg-white p-3 rounded-xl inline-block mb-4"></div>
+            <button onclick="toggleQRModal()" class="w-full py-2 transparent-btn text-white rounded-xl text-xs">إغلاق</button>
+        </div>
+    </div>
 
-        <section class="welcome">
-            <h1>أهلاً بيك 👋</h1>
-            <p>
-                لوحة تحكم Black Store لإدارة البوتات والطلبات والعملاء.
-            </p>
-        </section>
+    <div id="password-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+        <div class="glass-card rounded-2xl p-6 w-full max-w-xs text-center border border-white/10">
+            <h3 class="text-base font-bold text-white mb-2">لوحة التحكم</h3>
+            <input type="password" id="pass-input" placeholder="كلمة السر..." class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white text-center mb-3 focus:outline-none">
+            <div class="flex gap-2">
+                <button onclick="verifyPassword()" class="w-full py-2 bg-purple-600 text-white rounded-xl text-xs font-semibold">دخول</button>
+                <button onclick="closePasswordModal()" class="w-full py-2 transparent-btn text-white rounded-xl text-xs">إلغاء</button>
+            </div>
+        </div>
+    </div>
 
-        <section class="grid">
-
-            <div class="card">
-                <div class="icon">🤖</div>
-                <h2>البوتات</h2>
-                <p>إدارة وتشغيل بوتات Black Store.</p>
-                <span class="status">قريباً</span>
+    <div id="admin-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 z-50 overflow-y-auto">
+        <div class="glass-card rounded-2xl p-6 w-full max-w-lg my-6 border border-white/10">
+            <div class="flex justify-between items-center mb-4 pb-2 border-b border-white/10">
+                <h3 class="text-base font-bold text-white">لوحة تحكم مصطفى الشاملة</h3>
+                <button onclick="toggleAdminModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
 
-            <div class="card">
-                <div class="icon">📦</div>
-                <h2>الطلبات</h2>
-                <p>متابعة وإدارة طلبات العملاء.</p>
-                <span class="status">قريباً</span>
+            <div class="bg-white/5 border border-white/10 rounded-2xl p-4 mb-6">
+                <div class="grid grid-cols-2 gap-3 text-center mb-2">
+                    <div class="bg-black/30 p-2 rounded-xl">الزيارات: <span id="stat-views" class="font-bold text-purple-400">0</span></div>
+                    <div class="bg-black/30 p-2 rounded-xl">النقرات: <span id="stat-clicks" class="font-bold text-emerald-400">0</span></div>
+                </div>
             </div>
 
-            <div class="card">
-                <div class="icon">👥</div>
-                <h2>العملاء</h2>
-                <p>إدارة العملاء وحساباتهم.</p>
-                <span class="status">قريباً</span>
+            <div class="space-y-3 mb-6">
+                <input type="text" id="input-name" placeholder="الاسم" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white">
+                <input type="text" id="input-bio" placeholder="الوصف" class="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white">
+                
+                <div>
+                    <label class="text-[11px] text-gray-300 block mb-1">رفع صورة شخصية</label>
+                    <input type="file" id="file-profile" accept="image/*" class="w-full bg-white/5 border border-white/10 rounded-xl px-2 py-1 text-xs text-gray-300">
+                </div>
+                <div>
+                    <label class="text-[11px] text-gray-300 block mb-1">رفع خلفية الموقع</label>
+                    <input type="file" id="file-bg" accept="image/*" class="w-full bg-white/5 border border-white/10 rounded-xl px-2 py-1 text-xs text-gray-300">
+                </div>
             </div>
 
-            <div class="card">
-                <div class="icon">💰</div>
-                <h2>المبيعات</h2>
-                <p>متابعة المبيعات والإيرادات.</p>
-                <span class="status">قريباً</span>
-            </div>
+            <div id="admin-links-editor" class="space-y-2 max-h-52 overflow-y-auto mb-6 pr-1"></div>
 
-            <div class="card">
-                <div class="icon">🎮</div>
-                <h2>خدمات PUBG</h2>
-                <p>إضافة وتعديل خدمات الشحن.</p>
-                <span class="status">قريباً</span>
-            </div>
+            <button onclick="saveAllChanges()" class="w-full py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl text-xs font-bold shadow-lg">حفظ ومزامنة سحابية فورية</button>
+        </div>
+    </div>
 
-            <div class="card">
-                <div class="icon">🛡️</div>
-                <h2>الحماية</h2>
-                <p>إعدادات حماية جروبات Telegram.</p>
-                <span class="status">قريباً</span>
-            </div>
+    <script>
+        const SECRET_PASS = "SASA01001265263";
 
-            <div class="card">
-                <div class="icon">👨‍💼</div>
-                <h2>الموظفين</h2>
-                <p>إدارة الموظفين والصلاحيات.</p>
-                <span class="status">قريباً</span>
-            </div>
+        const defaultData = {
+            name: "مصطفى",
+            bio: "صانع محتوى ومطور أفكار 🚀",
+            profileImg: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300",
+            bgImg: "",
+            stats: { views: 0, clicks: 0 },
+            links: [
+                { id: "wa", title: "واتساب", icon: "fa-brands fa-whatsapp", url: "https://wa.me/201000000000", active: true, color: "text-emerald-400" },
+                { id: "ig", title: "انستجرام", icon: "fa-brands fa-instagram", url: "https://instagram.com", active: true, color: "text-pink-400" },
+                { id: "tk", title: "تيك توك", icon: "fa-brands fa-tiktok", url: "https://tiktok.com", active: true, color: "text-gray-200" },
+                { id: "fb", title: "فيسبوك", icon: "fa-brands fa-facebook", url: "https://facebook.com", active: true, color: "text-blue-400" },
+                { id: "tg", title: "تليجرام", icon: "fa-brands fa-telegram", url: "https://t.me", active: true, color: "text-sky-400" }
+            ]
+        };
 
-            <div class="card">
-                <div class="icon">⚙️</div>
-                <h2>الإعدادات</h2>
-                <p>إعدادات نظام Black Store.</p>
-                <span class="status">قريباً</span>
-            </div>
+        let appData = defaultData;
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyDummyKey_ReplaceWithYourActualKey",
+            authDomain: "mostafa-card.firebaseapp.com",
+            projectId: "mostafa-card",
+            storageBucket: "mostafa-card.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef"
+        };
 
-        </section>
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-    </main>
+        db.collection('card_data').doc('mostafa')
+            .onSnapshot((doc) => {
+                if (doc.exists) {
+                    appData = doc.data();
+                    renderApp();
+                } else {
+                    db.collection('card_data').doc('mostafa').set(defaultData);
+                }
+            }, (error) => {
+                console.log("خطأ في الاتصال بالقواعد:", error);
+            });
 
-    <footer class="footer">
-        BLACK STORE © 2026
-    </footer>
+        function renderApp() {
+            document.getElementById('user-name').innerText = appData.name || "مصطفى";
+            document.getElementById('user-bio').innerText = appData.bio || "";
+            document.getElementById('profile-img').src = appData.profileImg || defaultData.profileImg;
 
+            if (appData.bgImg) {
+                document.getElementById('main-body').style.backgroundImage = `url('${appData.bgImg}')`;
+            }
+
+            const container = document.getElementById('links-container');
+            container.innerHTML = '';
+            
+            (appData.links || []).filter(l => l.active).forEach(link => {
+                container.innerHTML += `
+                    <a href="${link.url}" target="_blank" onclick="trackClick()" class="transparent-btn flex items-center justify-between p-3.5 rounded-2xl">
+                        <div class="flex items-center gap-3.5">
+                            <div class="w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center text-lg ${link.color}">
+                                <i class="${link.icon}"></i>
+                            </div>
+                            <span class="font-semibold text-sm text-gray-100">${link.title}</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-left text-xs text-gray-400"></i>
+                    </a>
+                `;
+            });
+        }
+
+        function trackClick() {
+            db.collection('card_data').doc('mostafa').update({
+                "stats.clicks": firebase.firestore.FieldValue.increment(1)
+            });
+        }
+
+        let clickCount = 0, clickTimer;
+        function handleImageClick() {
+            clickCount++;
+            clearTimeout(clickTimer);
+            if (clickCount === 5) { clickCount = 0; openPasswordModal(); }
+            else { clickTimer = setTimeout(() => { clickCount = 0; }, 1500); }
+        }
+
+        function openPasswordModal() {
+            document.getElementById('password-modal').classList.remove('hidden');
+            document.getElementById('password-modal').classList.add('flex');
+        }
+
+        function closePasswordModal() {
+            document.getElementById('password-modal').classList.add('hidden');
+            document.getElementById('password-modal').classList.remove('flex');
+        }
+
+        function verifyPassword() {
+            if (document.getElementById('pass-input').value === SECRET_PASS) {
+                closePasswordModal();
+                toggleAdminModal();
+            } else { alert('كلمة السر غير صحيحة!'); }
+        }
+
+        function toggleAdminModal() {
+            const modal = document.getElementById('admin-modal');
+            modal.classList.toggle('hidden');
+            modal.classList.toggle('flex');
+
+            if (!modal.classList.contains('hidden')) {
+                document.getElementById('input-name').value = appData.name;
+                document.getElementById('input-bio').value = appData.bio;
+                document.getElementById('stat-views').innerText = appData.stats?.views || 0;
+                document.getElementById('stat-clicks').innerText = appData.stats?.clicks || 0;
+                renderAdminLinks();
+            }
+        }
+
+        function renderAdminLinks() {
+            const editor = document.getElementById('admin-links-editor');
+            editor.innerHTML = '';
+            appData.links.forEach((link, idx) => {
+                editor.innerHTML += `
+                    <div class="bg-white/5 border border-white/10 p-2.5 rounded-xl space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-gray-200 flex items-center gap-2">
+                                <i class="${link.icon} ${link.color}"></i> ${link.title}
+                            </span>
+                            <label class="switch">
+                                <input type="checkbox" ${link.active ? 'checked' : ''} onchange="appData.links[${idx}].active = this.checked">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <input type="text" value="${link.url}" onchange="appData.links[${idx}].url = this.value" class="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-xs text-gray-200">
+                    </div>
+                `;
+            });
+        }
+
+        function compressAndReadImage(fileInput, callback) {
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        const maxW = 400;
+                        const scale = maxW / img.width;
+                        canvas.width = maxW;
+                        canvas.height = img.height * scale;
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        callback(canvas.toDataURL('image/jpeg', 0.7));
+                    }
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else { callback(null); }
+        }
+
+        function saveAllChanges() {
+            appData.name = document.getElementById('input-name').value;
+            appData.bio = document.getElementById('input-bio').value;
+
+            const profileFile = document.getElementById('file-profile');
+            const bgFile = document.getElementById('file-bg');
+
+            compressAndReadImage(profileFile, (pRes) => {
+                if (pRes) appData.profileImg = pRes;
+                compressAndReadImage(bgFile, (bgRes) => {
+                    if (bgRes) appData.bgImg = bgRes;
+                    
+                    db.collection('card_data').doc('mostafa').set(appData)
+                        .then(() => {
+                            alert("تم الحفظ بنجاح ونزل للجميع فوراً!");
+                            toggleAdminModal();
+                        });
+                });
+            });
+        }
+
+        function toggleQRModal() {
+            const modal = document.getElementById('qr-modal');
+            modal.classList.toggle('hidden');
+            modal.classList.toggle('flex');
+            if (!modal.classList.contains('hidden')) {
+                document.getElementById("qrcode").innerHTML = "";
+                new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 140, height: 140 });
+            }
+        }
+    </script>
 </body>
 </html>
